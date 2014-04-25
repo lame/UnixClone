@@ -28,7 +28,7 @@ Clone Utility
 #include <sys/types.h>
 
 #define _GNU_SOURCE
-#define MAX_NUM 999999
+#define MAX_NUM 99999
 #define COPYMORE 0644
 
 
@@ -119,9 +119,16 @@ int Stat(char* file)
 
 int main(int argc, char *argv[])
 {
+
 	char *source;
 	char *destination;
-	char *destpath;
+	char *sourceptr;
+	char *destptr;
+	char *staticptr;
+	
+	char sourcepat[PATH_MAX+1];
+	char destpath[PATH_MAX+1];
+	char staticDest[PATH_MAX+1];
 
 	struct stat s;
 
@@ -131,8 +138,20 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	
+	/* ABSOLUTE PATH FOR ALL INPUT */
+	/*===============================*/
 	source = argv[1];
 	destination = argv[2];
+
+	sourceptr = realpath(source, sourcepath);
+	destptr = realpath(destination, destpath);
+	staticptr = realpath(destination, destpath);
+
+	printf("SourcePtr: %s\n", sourceptr);
+	printf("DourcePtr: %s\n", destptr);
+	printf("StaticPtr: %s\n", staticptr);
+
+	/*===============================*/
 
 	// Check is available
 
@@ -141,9 +160,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error: %s: No such file or directory.\n", source);
 		exit(1);
 	}
-
-	// checks if file
-	// if(source[0] != )
 
 	if( stat(source,&s) == 0 )
 	{
@@ -163,7 +179,7 @@ int main(int argc, char *argv[])
 	}
 
 
-	char* sourcepath = realpath(source, NULL);
+	sourcepath = realpath(source, NULL);
 
 
 	return 0;

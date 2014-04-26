@@ -60,7 +60,7 @@ int Dir(char *sourcepath, char* destpath)
 			// printf("d DNAME is %s\n", d->d_name);
 			// file = p->d_name;
 			// printf("File name before Reg Check: %s\n", file);
-			if(Stat(d->d_name))
+			if(IsFile(d->d_name))
 			{
 				strcat(tempDestination, d->d_name);
 				strcat(tempSource, d->d_name);
@@ -105,23 +105,6 @@ int File(char* sourcepath, char* destpath)
 	}
 }
 
-int Stat(char* file)
-{
-	struct stat s;
-	if(stat(file, &s) >= 0)
-	{
-		if(S_ISREG(s.st_mode))
-		{
-			return(1);
-		}
-		else
-		{
-			return 0;
-		}
-	}
-	return;
-}
-
 int main(int argc, char *argv[])
 {
 
@@ -142,7 +125,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error: Usage is <clone.c> <source> <destination>\n");
 		exit(1);
 	}
-	
+	/*===============================*/
 	/* ABSOLUTE PATH FOR ALL INPUT */
 	/*===============================*/
 	source = argv[1];
@@ -157,43 +140,24 @@ int main(int argc, char *argv[])
 	printf("StaticPtr: %s\n", staticptr);
 
 	/*===============================*/
-
-	// Check is available
-	 // if (chdir(cwd))
-  //        		 printf("%s: No such file or directory.\n", cwd);
-	
-	if (chdir(source))
+	if (chdir(sourceptr))
 	{
 		fprintf(stderr, "Error: %s: No such file or directory.\n", source);
 		exit(1);
 	}
-
 	if( IsFile(sourceptr) && IsFile(destptr))
 	{
+		printf("If conditional 1\n");
 		File(sourceptr, destptr);
 	}
 	else if(IsFile(sourceptr) && !IsFile(destptr))
 	{
-		int i;
-		for(i=1; i<=strlen(destptr); i++)
-		{
-			destptr[(i-1)] = destptr[i];
-		}
-		strcat(destptr, "/");
-		strcat(destptr, sourceptr);
+		printf("If conditional 2\n");
 		File(sourceptr, destptr);
 	}
 	else if(!IsFile(sourceptr) && !IsFile(destptr))
 	{
-		int i;
-		for(i=1; i<=strlen(destptr); i++)
-		{
-			destptr[(i-1)] = destptr[i];
-		}
-		for(i=1; i<=strlen(sourceptr); i++)
-		{
-			sourceptr[(i-1)] = sourceptr[i];
-		}
+		printf("If conditional 2\n");
 		Dir(sourceptr, destptr);
 	}
 	else
@@ -204,3 +168,19 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+
+// int Stat(char* file)
+// {
+// 	struct stat s;
+// 	if(stat(file, &s) >= 0)
+// 	{
+// 		if(S_ISREG(s.st_mode))
+// 		{
+// 			return(1);
+// 		}
+// 		else
+// 		{
+// 			return (0);
+// 		}
+// 	}
+// }

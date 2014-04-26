@@ -31,6 +31,11 @@ Clone Utility
 #define MAX_NUM 99999
 #define COPYMORE 0644
 
+int IsFile(char* file)
+{
+  struct stat info;
+  return (!stat(file, &info) && S_ISREG(info.st_mode));
+}
 
 int Dir(char *sourcepath, char* destpath)
 {
@@ -126,7 +131,7 @@ int main(int argc, char *argv[])
 	char *destptr;
 	char *staticptr;
 	
-	char sourcepat[PATH_MAX+1];
+	char sourcepath[PATH_MAX+1];
 	char destpath[PATH_MAX+1];
 	char staticDest[PATH_MAX+1];
 
@@ -154,33 +159,48 @@ int main(int argc, char *argv[])
 	/*===============================*/
 
 	// Check is available
-
+	 // if (chdir(cwd))
+  //        		 printf("%s: No such file or directory.\n", cwd);
+	
 	if (chdir(source))
 	{
 		fprintf(stderr, "Error: %s: No such file or directory.\n", source);
 		exit(1);
 	}
 
-	if( stat(source,&s) == 0 )
+	if( IsFile(sourceptr) && IsFile(destptr))
 	{
-		if( s.st_mode & S_IFDIR )
+		File(sourceptr, destptr);
+	}
+	else if(IsFile(sourceptr) && !IsFile(destptr))
+	{
+		int i;
+		for(i=1; i<=strlen(destptr); i++)
 		{
-			printf("%s is a directory", source);
+			destptr[(i-1)] = destptr[i];
 		}
-		else if( s.st_mode & S_IFREG )
+		strcat(destptr, "/");
+		strcat(destptr, sourceptr);
+		File(sourceptr, destptr);
+	}
+	else if(!IsFile(sourceptr) && !IsFile(destptr))
+	{
+		int i;
+		for(i=1; i<=strlen(destptr); i++)
 		{
-			printf("%s is a file", source);
+			destptr[(i-1)] = destptr[i];
 		}
+		for(i=1; i<=strlen(sourceptr); i++)
+		{
+			sourceptr[(i-1)] = sourceptr[i];
+		}
+		Dir(sourceptr, destptr);
 	}
 	else
 	{
 		fprintf(stderr, "Error: Stat did not recognize input type\n");
 		exit(1);
 	}
-
-
-	sourcepath = realpath(source, NULL);
-
 
 	return 0;
 }

@@ -6,7 +6,6 @@ Assignment 4
 Clone Utility 
 */
 
-
 // (1) If the source directory doesn't exist, print an error.
 
 // (2) If the destination directory doesn't exist, create it.
@@ -28,6 +27,7 @@ Clone Utility
 #include <sys/types.h>
 
 #define _GNU_SOURCE
+
 #define MAX_NUM 99999
 #define COPYMORE 0644
 
@@ -55,11 +55,9 @@ int Dir(char *sourcepath, char* destpath)
 	}
 	else
 	{
+		printf("Creating directory %s\n", destptr);
 		while((d = readdir(ptr)))
 		{
-			// printf("d DNAME is %s\n", d->d_name);
-			// file = p->d_name;
-			// printf("File name before Reg Check: %s\n", file);
 			if(IsFile(d->d_name))
 			{
 				strcat(tempDestination, d->d_name);
@@ -74,28 +72,40 @@ int Dir(char *sourcepath, char* destpath)
 	}
 }
 
-int File(char* sourcepath, char* destpath)
+int File(char* sourceptr, char* destptr)
 {
 	int in, out, chars;
 	char buffer[1025];
+	struct stat fst;
 
-	if((in=open(sourcepath, O_RDONLY)) == -1)
+	stat(sourceptr,&fst);
+
+	if((in=open(sourceptr, O_RDONLY)) == -1)
 	{
-		fprintf(stderr, "Error: Cannot open %s\n", sourcepath);
+		fprintf(stderr, "Error: Cannot open %s\n", sourceptr);
 	}
-	if((out=creat(destpath, COPYMORE)) == -1)
+	if((out=creat(destptr, COPYMORE)) == -1)
 	{
-		fprintf(stderr, "Error: Cannot Create %s\n", destpath);
+		fprintf(stderr, "Error: Cannot Create %s\n", destptr);
 	}
+
+	printf("Copying %s to %s\n", sourceptr, destptr);
+	
+	chmod(destptr,fst.st_mode);
+	printf("Setting permissions for %s: %d\n", destptr, (unsigned int)fst.st_mode);
+	chown(destptr,fst.st_uid,fst.st_gid);
+	printf("Setting user and group for %s: %d, %d\n", destptr, (unsigned int)fst.st_uid,(unsigned int)fst.st_gid);
+	
 	while((chars = read(in, buffer, 1025)) >0)
 	{
+		printf("\nIn While loop\n");
 		if(write(out, buffer, chars) != chars)
 		{
-			fprintf(stderr, "Error: Write error from %s\n", sourcepath);
+			fprintf(stderr, "Error: Write error from %s\n", sourceptr);
 		}
 		if(chars == -1)
 		{
-			fprintf(stderr, "Error: Read error from %s\n", destpath);
+			fprintf(stderr, "Error: Read error from %s\n", destptr);
 		}
 	}
 
@@ -117,6 +127,7 @@ int main(int argc, char *argv[])
 	char sourcepath[PATH_MAX+1];
 	char destpath[PATH_MAX+1];
 	char staticDest[PATH_MAX+1];
+	char cwd[PATH_MAX+1];
 
 	struct stat s;
 
@@ -135,6 +146,11 @@ int main(int argc, char *argv[])
 	destptr = realpath(destination, destpath);
 	staticptr = realpath(destination, destpath);
 
+	getcwd(cwd, sizeof(cwd));
+
+	strcat(cwd, "/");
+	strcat(cwd, source);
+
 	printf("SourcePtr: %s\n", sourceptr);
 	printf("DourcePtr: %s\n", destptr);
 	printf("StaticPtr: %s\n", staticptr);
@@ -145,22 +161,29 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error: %s: No such file or directory.\n", source);
 		exit(1);
 	}
-	if( IsFile(sourceptr) && IsFile(destptr))
+	if( IsFile(sourceptr) && IsFile(destptr))	/*File && File*/
 	{
 		printf("If conditional 1\n");
+		printf("Sending\n\t%s\n\t%s\n\n", sourceptr, destptr);
 		File(sourceptr, destptr);
 	}
-	else if(IsFile(sourceptr) && !IsFile(destptr))
+	else if(IsFile(sourceptr) && !IsFile(destptr))	/*File && Directory*/
 	{
 		printf("If conditional 2\n");
+		printf("Sending\n\t%s\n\t%s\n\n", sourceptr, destptr);
+		strcat(destptr, "/");
 		File(sourceptr, destptr);
 	}
-	else if(!IsFile(sourceptr) && !IsFile(destptr))
+	else if(!IsFile(sourceptr) && !IsFile(destptr))	/*Directory && Directory*/
 	{
-		printf("If conditional 2\n");
+		printf("If conditional 3\n");
+		printf("Sending\n\t%s\n\t%s\n\n", sourceptr, destptr);
+		strcat(destptr, "/");
+		strcat(sourceptr, "/");
 		Dir(sourceptr, destptr);
+
 	}
-	else
+	else	
 	{
 		fprintf(stderr, "Error: Stat did not recognize input type\n");
 		exit(1);

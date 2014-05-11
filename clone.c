@@ -55,7 +55,7 @@ int Dir(char *sourcepath, char* destpath)
 	}
 	else
 	{
-		printf("Creating directory %s\n", destptr);
+		printf("Creating directory %s\n", destpath);
 		while((d = readdir(ptr)))
 		{
 			if(IsFile(d->d_name))
